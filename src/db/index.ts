@@ -1,14 +1,17 @@
-import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
-import * as schema from './schema';
+import ws from "ws";
+import { neonConfig, Pool } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-serverless";
 
-// Verificamos que la variable de entorno exista para evitar errores en producción
+import * as schema from "./schema";
+
 if (!process.env.DATABASE_URL) {
-  throw new Error('Falta la variable de entorno DATABASE_URL');
+  throw new Error("Falta la variable de entorno DATABASE_URL");
 }
 
-// Inicializamos la conexión HTTP de Neon (ideal para Vercel/Serverless)
-const sql = neon(process.env.DATABASE_URL);
+neonConfig.webSocketConstructor = ws;
 
-// Exportamos la instancia 'db' junto con el esquema para hacer consultas
-export const db = drizzle(sql, { schema });
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+export const db = drizzle(pool, { schema });

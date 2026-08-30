@@ -232,3 +232,48 @@ export const orderItems = pgTable(
     ),
   }),
 );
+// -----------------------------------------------------------------------------
+// Notifications
+// -----------------------------------------------------------------------------
+
+export const notificationTypeEnum = pgEnum("notification_type", [
+  "STOCK_CRITICAL",
+]);
+
+export const notifications = pgTable(
+  "notification",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+
+    type: notificationTypeEnum("type").notNull(),
+
+    productId: text("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+
+    title: text("title").notNull(),
+    message: text("message").notNull(),
+
+    stockReal: integer("stock_real").notNull(),
+    stockComprometido: integer("stock_comprometido").notNull(),
+    stockDisponible: integer("stock_disponible").notNull(),
+    stockMinimo: integer("stock_minimo").notNull(),
+
+    readAt: timestamp("read_at", { mode: "date" }),
+
+    createdAt: timestamp("created_at", { mode: "date" })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    productIdx: index("notification_product_id_idx").on(table.productId),
+    typeIdx: index("notification_type_idx").on(table.type),
+    createdAtIdx: index("notification_created_at_idx").on(table.createdAt),
+    unreadIdx: index("notification_unread_idx").on(
+      table.readAt,
+      table.createdAt,
+    ),
+  }),
+);
